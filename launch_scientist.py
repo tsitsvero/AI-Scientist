@@ -227,55 +227,55 @@ def do_idea(
 
         print_time()
         print(f"*Starting Review*")
-        ## REVIEW PAPER
-        if writeup == "latex":
-            try:
-                paper_text = load_paper(f"{folder_name}/{idea['Name']}.pdf")
-                review = perform_review(
-                    paper_text,
-                    model="gpt-4o-2024-05-13",
-                    client=openai.OpenAI(),
-                    num_reflections=5,
-                    num_fs_examples=1,
-                    num_reviews_ensemble=5,
-                    temperature=0.1,
-                )
-                # Store the review in separate review.txt file
-                with open(osp.join(folder_name, "review.txt"), "w") as f:
-                    f.write(json.dumps(review, indent=4))
-            except Exception as e:
-                print(f"Failed to perform review: {e}")
-                return False
+        # ## REVIEW PAPER
+        # if writeup == "latex":
+        #     try:
+        #         paper_text = load_paper(f"{folder_name}/{idea['Name']}.pdf")
+        #         review = perform_review(
+        #             paper_text,
+        #             model="gpt-4o-2024-05-13",
+        #             client=openai.OpenAI(),
+        #             num_reflections=5,
+        #             num_fs_examples=1,
+        #             num_reviews_ensemble=5,
+        #             temperature=0.1,
+        #         )
+        #         # Store the review in separate review.txt file
+        #         with open(osp.join(folder_name, "review.txt"), "w") as f:
+        #             f.write(json.dumps(review, indent=4))
+        #     except Exception as e:
+        #         print(f"Failed to perform review: {e}")
+        #         return False
 
-        ## IMPROVE WRITEUP
-        if writeup == "latex" and improvement:
-            print_time()
-            print(f"*Starting Improvement*")
-            try:
-                perform_improvement(review, coder)
-                generate_latex(
-                    coder, folder_name, f"{folder_name}/{idea['Name']}_improved.pdf"
-                )
-                paper_text = load_paper(f"{folder_name}/{idea['Name']}_improved.pdf")
-                review = perform_review(
-                    paper_text,
-                    model="gpt-4o-2024-05-13",
-                    client=openai.OpenAI(),
-                    num_reflections=5,
-                    num_fs_examples=1,
-                    num_reviews_ensemble=5,
-                    temperature=0.1,
-                )
-                # Store the review in separate review.txt file
-                with open(osp.join(folder_name, "review_improved.txt"), "w") as f:
-                    f.write(json.dumps(review))
-            except Exception as e:
-                print(f"Failed to perform improvement: {e}")
-                return False
-        return True
-    except Exception as e:
-        print(f"Failed to evaluate idea {idea_name}: {str(e)}")
-        return False
+    #     ## IMPROVE WRITEUP
+    #     if writeup == "latex" and improvement:
+    #         print_time()
+    #         print(f"*Starting Improvement*")
+    #         try:
+    #             perform_improvement(review, coder)
+    #             generate_latex(
+    #                 coder, folder_name, f"{folder_name}/{idea['Name']}_improved.pdf"
+    #             )
+    #             paper_text = load_paper(f"{folder_name}/{idea['Name']}_improved.pdf")
+    #             review = perform_review(
+    #                 paper_text,
+    #                 model="gpt-4o-2024-05-13",
+    #                 client=openai.OpenAI(),
+    #                 num_reflections=5,
+    #                 num_fs_examples=1,
+    #                 num_reviews_ensemble=5,
+    #                 temperature=0.1,
+    #             )
+    #             # Store the review in separate review.txt file
+    #             with open(osp.join(folder_name, "review_improved.txt"), "w") as f:
+    #                 f.write(json.dumps(review))
+    #         except Exception as e:
+    #             print(f"Failed to perform improvement: {e}")
+    #             return False
+    #     return True
+    # except Exception as e:
+    #     print(f"Failed to evaluate idea {idea_name}: {str(e)}")
+    #     return False
     finally:
         print("FINISHED IDEA")
         if log_file:
