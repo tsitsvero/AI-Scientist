@@ -217,7 +217,7 @@ def do_idea(
                 edit_format="diff",
             )
             try:
-                perform_writeup(idea, folder_name, coder, client, client_model)
+                perform_writeup(idea, folder_name, coder, client, client_model, num_cite_rounds=0)
             except Exception as e:
                 print(f"Failed to perform writeup: {e}")
                 return False
@@ -310,12 +310,16 @@ if __name__ == "__main__":
         max_num_generations=args.num_ideas,
         num_reflections=NUM_REFLECTIONS,
     )
-    ideas = check_idea_novelty(
-        ideas,
-        base_dir=base_dir,
-        client=client,
-        model=client_model,
-    )
+    if not args.skip_novelty_check:
+        ideas = check_idea_novelty(
+            ideas,
+            base_dir=base_dir,
+            client=client,
+            model=client_model,
+        )
+    else:
+        for idea in ideas:
+            idea["novel"] = 1.0
 
     with open(osp.join(base_dir, "ideas.json"), "w") as f:
         json.dump(ideas, f, indent=4)
