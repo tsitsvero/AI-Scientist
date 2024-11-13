@@ -23,9 +23,12 @@ for folder in folders:
             train_losses = []
             for k in results_dict.keys():
                 if dataset in k and "val_info" in k:
-                    run_info[dataset]["iters"] = [info["iter"] for info in results_dict[k]]
-                    val_losses.append([info["val/loss"] for info in results_dict[k]])
-                    train_losses.append([info["train/loss"] for info in results_dict[k]])
+                    # Get the validation info list
+                    val_info_list = results_dict[k]
+                    # Extract iterations and losses from the list of dictionaries
+                    run_info[dataset]["iters"] = [info["iter"] for info in val_info_list]
+                    val_losses.append([info["val/loss"] for info in val_info_list])
+                    train_losses.append([info["train/loss"] for info in val_info_list])
                 mean_val_losses = np.mean(val_losses, axis=0)
                 mean_train_losses = np.mean(train_losses, axis=0)
                 if len(val_losses) > 0:

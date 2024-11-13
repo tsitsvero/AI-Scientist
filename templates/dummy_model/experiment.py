@@ -687,25 +687,35 @@ import random
 
 def train_dummy(dataset, out_dir, seed_offset):
     """Dummy training function that returns random numbers in the same format as train()"""
+    # Create output directory if it doesn't exist
+    os.makedirs(out_dir, exist_ok=True)
+    
     # Create random final_info dict with realistic-looking values
     final_info = {
-        "train_loss": random.uniform(0.5, 2.0),
-        "val_loss": random.uniform(0.5, 2.0),
+        "final_train_loss": random.uniform(0.5, 2.0),
         "best_val_loss": random.uniform(0.5, 2.0),
+        "total_train_time": random.uniform(100, 1000),
         "avg_inference_tokens_per_second": random.uniform(10, 100)
     }
 
-    # Create random training logs
-    train_log_info = {
-        "loss": [random.uniform(0.5, 3.0) for _ in range(100)],
-        "iter": list(range(100))
-    }
+    # Create random training logs with the correct structure
+    train_log_info = []
+    for i in range(100):
+        train_log_info.append({
+            "iter": i,
+            "loss": random.uniform(0.5, 3.0),
+            "time": random.uniform(10, 100)
+        })
 
-    # Create random validation logs 
-    val_log_info = {
-        "loss": [random.uniform(0.5, 3.0) for _ in range(20)],
-        "iter": [i*5 for i in range(20)]
-    }
+    # Create random validation logs with the correct structure
+    val_log_info = []
+    for i in range(20):
+        val_log_info.append({
+            "iter": i * 5,
+            "train/loss": random.uniform(0.5, 3.0),
+            "val/loss": random.uniform(0.5, 3.0),
+            "lr": random.uniform(0.0001, 0.001)
+        })
 
     # Save dummy final info
     with open(os.path.join(out_dir, f"final_info_{dataset}_{seed_offset}.json"), "w") as f:
