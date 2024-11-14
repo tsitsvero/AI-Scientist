@@ -1,98 +1,68 @@
-import json
-import os
-import os.path as osp
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.Chem import Draw
 
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
+
+import ase
+from xtb.ase.calculator import XTB
 import numpy as np
 
-# LOAD FINAL RESULTS:
-datasets = ["shakespeare_char", "enwik8", "text8"]
-folders = os.listdir("./")
-final_results = {}
-results_info = {}
-for folder in folders:
-    if folder.startswith("run") and osp.isdir(folder):
-        with open(osp.join(folder, "final_info.json"), "r") as f:
-            final_results[folder] = json.load(f)
-        results_dict = np.load(osp.join(folder, "all_results.npy"), allow_pickle=True).item()
-        run_info = {}
-        for dataset in datasets:
-            run_info[dataset] = {}
-            val_losses = []
-            train_losses = []
-            for k in results_dict.keys():
-                if dataset in k and "val_info" in k:
-                    # Get the validation info list
-                    val_info_list = results_dict[k]
-                    # Extract iterations and losses from the list of dictionaries
-                    run_info[dataset]["iters"] = [info["iter"] for info in val_info_list]
-                    val_losses.append([info["val/loss"] for info in val_info_list])
-                    train_losses.append([info["train/loss"] for info in val_info_list])
-                mean_val_losses = np.mean(val_losses, axis=0)
-                mean_train_losses = np.mean(train_losses, axis=0)
-                if len(val_losses) > 0:
-                    sterr_val_losses = np.std(val_losses, axis=0) / np.sqrt(len(val_losses))
-                    stderr_train_losses = np.std(train_losses, axis=0) / np.sqrt(len(train_losses))
-                else:
-                    sterr_val_losses = np.zeros_like(mean_val_losses)
-                    stderr_train_losses = np.zeros_like(mean_train_losses)
-                run_info[dataset]["val_loss"] = mean_val_losses
-                run_info[dataset]["train_loss"] = mean_train_losses
-                run_info[dataset]["val_loss_sterr"] = sterr_val_losses
-                run_info[dataset]["train_loss_sterr"] = stderr_train_losses
-        results_info[folder] = run_info
 
-# CREATE LEGEND -- ADD RUNS HERE THAT WILL BE PLOTTED
-labels = {
-    "run_0": "Baselines",
-}
+def render_molecule_rdkit(xyz_path, out_path):
+    """Renders a molecule from an xyz file using RDKit and saves it as a png image
+    
+    Args:
+        xyz_path (str): Path to input xyz file
+        out_path (str): Path to save output png file
+    """
+    # Read XYZ file
+    with open(xyz_path, "r") as f:
+        xyz_data = f.readlines()
+
+    # Parse number of atoms
+    num_atoms = int(xyz_data[0])
+
+    # Create RDKit molecule
+    mol = Chem.rdchem.RWMol()
+    conf = Chem.rdchem.Conformer(num_atoms)
+
+    # Add atoms and coordinates
+    for i in range(2, num_atoms+2):
+        line = xyz_data[i].split()
+        atom_symbol = line[0]
+        x = float(line[1])
+        y = float(line[2])
+        z = float(line[3])
+        
+        # Add atom
+        atom = Chem.rdchem.Atom(atom_symbol)
+        atom_idx = mol.AddAtom(atom)
+        
+        # Set 3D coordinates
+        conf.SetAtomPosition(atom_idx, (x, y, z))
+
+    # Add the conformer after all atoms are added
+    mol.AddConformer(conf)
+
+    # Connect atoms based on distance
+    for i in range(mol.GetNumAtoms()):
+        for j in range(i+1, mol.GetNumAtoms()):
+            pos_i = conf.GetAtomPosition(i)
+            pos_j = conf.GetAtomPosition(j)
+            dist = pos_i.Distance(pos_j)
+            
+            # Add bonds if atoms are close enough
+            if dist < 1.7:  # Typical bond length threshold in Angstroms
+                mol.AddBond(i, j, Chem.rdchem.BondType.SINGLE)
+
+    # Convert to regular molecule and render
+    mol = mol.GetMol()
+    img = Draw.MolToImage(mol)
+    img.save(out_path)
 
 
-# Create a programmatic color palette
-def generate_color_palette(n):
-    cmap = plt.get_cmap('tab20')
-    return [mcolors.rgb2hex(cmap(i)) for i in np.linspace(0, 1, n)]
 
 
-# Get the list of runs and generate the color palette
-runs = list(labels.keys())
-colors = generate_color_palette(len(runs))
-
-# Plot 1: Line plot of training loss for each dataset across the runs with labels
-for dataset in datasets:
-    plt.figure(figsize=(10, 6))
-    for i, run in enumerate(runs):
-        iters = results_info[run][dataset]["iters"]
-        mean = results_info[run][dataset]["train_loss"]
-        sterr = results_info[run][dataset]["train_loss_sterr"]
-        plt.plot(iters, mean, label=labels[run], color=colors[i])
-        plt.fill_between(iters, mean - sterr, mean + sterr, color=colors[i], alpha=0.2)
-
-    plt.title(f"Training Loss Across Runs for {dataset} Dataset")
-    plt.xlabel("Iteration")
-    plt.ylabel("Training Loss")
-    plt.legend()
-    plt.grid(True, which="both", ls="-", alpha=0.2)
-    plt.tight_layout()
-    plt.savefig(f"train_loss_{dataset}.png")
-    plt.close()
-
-# Plot 2: Line plot of validation loss for each dataset across the runs with labels
-for dataset in datasets:
-    plt.figure(figsize=(10, 6))
-    for i, run in enumerate(runs):
-        iters = results_info[run][dataset]["iters"]
-        mean = results_info[run][dataset]["val_loss"]
-        sterr = results_info[run][dataset]["val_loss_sterr"]
-        plt.plot(iters, mean, label=labels[run], color=colors[i])
-        plt.fill_between(iters, mean - sterr, mean + sterr, color=colors[i], alpha=0.2)
-
-    plt.title(f"Validation Loss Across Runs for {dataset} Dataset")
-    plt.xlabel("Iteration")
-    plt.ylabel("Validation Loss")
-    plt.legend()
-    plt.grid(True, which="both", ls="-", alpha=0.2)
-    plt.tight_layout()
-    plt.savefig(f"val_loss_{dataset}.png")
-    plt.close()
+render_molecule_rdkit(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react.png"))
+render_molecule_rdkit(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts.png"))
+render_molecule_rdkit(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod.png"))
