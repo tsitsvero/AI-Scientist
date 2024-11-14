@@ -88,7 +88,7 @@ import ase
 from xtb.ase.calculator import XTB
 import numpy as np
 
-def get_molecule_and_chemical_formula():
+def get_molecule_and_chemical_formula(idx=0):
     print("Loading dataset...")
 
     device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda")
@@ -114,8 +114,7 @@ def get_molecule_and_chemical_formula():
         collate_fn=dataset.collate_fn
     )
 
-    data_list = list(loader)
-    idx = 0
+    data_list = list(loader)[:10]  # Only use first 10 entries
 
     print("Getting molecule representations...")
     representations, res= data_list[idx]
@@ -178,10 +177,6 @@ def generate_ts_and_products(representations, res, checkpoint_path="/home/mm/Dow
     ddpm_trainer = ddpm_trainer.to(device)
 
     print("Preparing inputs for generation...")
-    # representations, res = next(itertools.islice(itl, 3, 40))  # Get 4th sample directly
-    # idx = 1
-    # representations, res = data_list[idx]
-    # idx += 1
     n_samples = representations[0]["size"].size(0)
     fragments_nodes = [
         repre["size"] for repre in representations
@@ -304,7 +299,12 @@ def generate_dummy(dataset, out_dir, seed_offset):
     # Create output directory if it doesn't exist
     os.makedirs(out_dir, exist_ok=True)
     
-    representations, res, chemical_formula, atoms = get_molecule_and_chemical_formula()
+    ## SET INDEX OF MOLECULE TO USE HERE:
+    ###################################
+    idx = 0
+    ###################################
+
+    representations, res, chemical_formula, atoms = get_molecule_and_chemical_formula(idx=idx)
     print("Chemical formula:", chemical_formula)
     
     # Write xyz file directly to output directory
