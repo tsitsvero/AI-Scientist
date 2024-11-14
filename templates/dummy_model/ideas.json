@@ -5,7 +5,8 @@
         "Experiment": "Modify the model to dynamically adjust its block size during training, starting with a smaller block size and gradually increasing it. This could potentially lead to faster initial training and better long-range dependency learning.",
         "Interestingness": 6,
         "Feasibility": 4,
-        "Novelty": 4
+        "Novelty": 4,
+        "novel": 1.0
     },
     {
         "Name": "layerwise_learning_rates",
@@ -13,14 +14,16 @@
         "Experiment": "Implement layer-wise learning rates, where each transformer layer has its own learning rate. Modify the configure_optimizers function to assign different learning rates to different layers, with deeper layers having lower learning rates. Compare the training dynamics, convergence speed, and final performance with the baseline model.",
         "Interestingness": 4,
         "Feasibility": 6,
-        "Novelty": 2
+        "Novelty": 2,
+        "novel": 1.0
     },
     {
-        "Name": "learnable_attention_masks",
-        "Title": "Learnable Attention Masks: Targeted Relevance in Language Models",
-        "Experiment": "Modify the CausalSelfAttention class to include learnable attention masks that adjust which tokens receive attention during training. This can be achieved by applying a learnable binary mask to the attention weights, allowing the model to learn which parts of the input are more relevant. The performance will be evaluated based on training loss and generation quality compared to the baseline model.",
+        "Name": "sparse_attention",
+        "Title": "Sparse Attention Mechanism: Enhancing Efficiency in Transformer Models",
+        "Experiment": "Modify the CausalSelfAttention class to implement a sparse attention mechanism using a fixed sparsity pattern, such as a sliding window that limits attention to a subset of neighboring tokens. Evaluate the impact on training efficiency (training time and memory usage) and model performance (perplexity and accuracy) compared to the baseline model. Ensure clear metrics for comparison and consider future extensions towards learned sparsity patterns based on initial findings.",
         "Interestingness": 8,
-        "Feasibility": 6,
-        "Novelty": 7
+        "Feasibility": 7,
+        "Novelty": 7,
+        "novel": 1.0
     }
 ]
