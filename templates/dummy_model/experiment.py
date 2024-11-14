@@ -927,6 +927,37 @@ def generate_molecule(checkpoint_path, device=None):
     return out_samples, out_masks
 
 
+import ase
+from xtb.ase.calculator import XTB
+import numpy as np
+
+def get_chemical_formula(out_samples, xh_fixed, return_energy=False):
+    # Convert out_samples tensor to positions
+    # pos = out_samples[0][0].detach().cpu().numpy()[:,:3]  # Get positions for structure 1
+    pos = out_samples[0][0].detach().cpu().numpy()[:,:3] # Get positions for TS structure, take only first 3 coords
+    
+    # Get atomic numbers from last column of features
+    # atomic_nums = out_samples[1][0].detach().cpu().numpy()[:,-1].astype(int)
+    # Get atomic numbers from representations
+    atomic_nums = xh_fixed[1][:, -1].detach().cpu().numpy().astype(int)
+
+    # Get atomic numbers from representations
+    atomic_nums = xh_fixed[1][:, -1].detach().cpu().numpy().astype(int)
+    
+    # Create ASE Atoms object
+    atoms = ase.Atoms(numbers=atomic_nums, positions=pos)
+    
+    if return_energy:
+        # Set up xtb calculator with GFN2-xTB method
+        atoms.calc = XTB(method="GFN2-xTB")
+        energy = atoms.get_potential_energy()
+        return atoms.get_chemical_formula(), energy
+        
+    return atoms.get_chemical_formula()
+
+
+
+
 
 if __name__ == "__main__":
     num_seeds = {
