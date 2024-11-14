@@ -812,6 +812,121 @@ def render_molecule_rdkit(xyz_path, out_path):
 
 
 
+# --- Importing necessary function ---
+import torch
+from torch.utils.data import DataLoader
+
+from oa_reactdiff.trainer.pl_trainer import DDPMModule
+
+
+from oa_reactdiff.dataset import ProcessedTS1x
+from oa_reactdiff.diffusion._schedule import DiffSchedule, PredefinedNoiseSchedule
+
+from oa_reactdiff.diffusion._normalizer import FEATURE_MAPPING
+from oa_reactdiff.analyze.rmsd import batch_rmsd
+
+from oa_reactdiff.utils.sampling_tools import (
+    assemble_sample_inputs,
+    write_tmp_xyz,
+)
+
+def generate_molecule(checkpoint_path, device=None):
+    """Generates a molecule using a pre-trained DDPM model
+    
+    Args:
+        checkpoint_path (str): Path to the model checkpoint
+        device (torch.device, optional): Device to run the model on. Defaults to CUDA if available.
+    
+    Returns:
+        tuple: Generated molecule samples and masks
+    """
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Load model
+    ddpm_trainer = DDPMModule.load_from_checkpoint(
+        checkpoint_path=checkpoint_path,
+        map_location=device
+    )
+    ddpm_trainer = ddpm_trainer.to(device)
+
+    # Set up noise schedule
+    noise_schedule = "polynomial_2"
+    timesteps = 150
+    precision = 1e-5
+
+    gamma_module = PredefinedNoiseSchedule(
+        noise_schedule=noise_schedule,
+        timesteps=timesteps,
+        precision=precision,
+    )
+    schedule = DiffSchedule(
+        gamma_module=gamma_module,
+        norm_values=ddpm_trainer.ddpm.norm_values
+    )
+    ddpm_trainer.ddpm.schedule = schedule
+    ddpm_trainer.ddpm.T = timesteps
+    ddpm_trainer = ddpm_trainer.to(device)
+
+    # Load dataset
+    dataset = ProcessedTS1x(
+        npz_path="./oa_reactdiff/data/transition1x/train.pkl",
+        center=True,
+        pad_fragments=0,
+        device=device,
+        zero_charge=False,
+        remove_h=False,
+        single_frag_only=False,
+        swapping_react_prod=False,
+        use_by_ind=True,
+    )
+    loader = DataLoader(
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        collate_fn=dataset.collate_fn
+    )
+
+    # Get sample from dataset
+    itl = iter(loader)
+    for _ in range(4):  # Get 4th sample (multimolecular reaction)
+        representations, res = next(itl)
+
+    n_samples = representations[0]["size"].size(0)
+    fragments_nodes = [repre["size"] for repre in representations]
+    conditions = torch.tensor([[0] for _ in range(n_samples)], device=device)
+
+    # Randomly permute atoms in reactant
+    new_order_react = torch.randperm(representations[0]["size"].item())
+    for k in ["pos", "one_hot", "charge"]:
+        representations[0][k] = representations[0][k][new_order_react]
+
+    # Prepare features
+    xh_fixed = [
+        torch.cat(
+            [repre[feature_type] for feature_type in FEATURE_MAPPING],
+            dim=1,
+        )
+        for repre in representations
+    ]
+
+    # Generate molecule
+    out_samples, out_masks = ddpm_trainer.ddpm.inpaint(
+        n_samples=1,
+        fragments_nodes=fragments_nodes,
+        conditions=conditions,
+        return_frames=1,
+        resamplings=0,
+        jump_length=5,
+        timesteps=1,
+        xh_fixed=xh_fixed,
+        frag_fixed=[0, 2],
+    )
+
+    return out_samples, out_masks
+
+
 
 if __name__ == "__main__":
     num_seeds = {
