@@ -21,43 +21,43 @@ args = parser.parse_args()
 
 import random
 
-def train_dummy(dataset, out_dir, seed_offset):
-    """Dummy training function that returns random numbers in the same format as train()"""
-    # Create output directory if it doesn't exist
-    os.makedirs(out_dir, exist_ok=True)
+# def train_dummy(dataset, out_dir, seed_offset):
+#     """Dummy training function that returns random numbers in the same format as train()"""
+#     # Create output directory if it doesn't exist
+#     os.makedirs(out_dir, exist_ok=True)
     
-    # Create random final_info dict with realistic-looking values
-    final_info = {
-        "final_train_loss": random.uniform(0.5, 2.0),
-        "best_val_loss": random.uniform(0.5, 2.0),
-        "total_train_time": random.uniform(100, 1000),
-        "avg_inference_tokens_per_second": random.uniform(10, 100)
-    }
+#     # Create random final_info dict with realistic-looking values
+#     final_info = {
+#         "final_train_loss": random.uniform(0.5, 2.0),
+#         "best_val_loss": random.uniform(0.5, 2.0),
+#         "total_train_time": random.uniform(100, 1000),
+#         "avg_inference_tokens_per_second": random.uniform(10, 100)
+#     }
 
-    # Create random training logs with the correct structure
-    train_log_info = []
-    for i in range(100):
-        train_log_info.append({
-            "iter": i,
-            "loss": random.uniform(0.5, 3.0),
-            "time": random.uniform(10, 100)
-        })
+#     # Create random training logs with the correct structure
+#     train_log_info = []
+#     for i in range(100):
+#         train_log_info.append({
+#             "iter": i,
+#             "loss": random.uniform(0.5, 3.0),
+#             "time": random.uniform(10, 100)
+#         })
 
-    # Create random validation logs with the correct structure
-    val_log_info = []
-    for i in range(20):
-        val_log_info.append({
-            "iter": i * 5,
-            "train/loss": random.uniform(0.5, 3.0),
-            "val/loss": random.uniform(0.5, 3.0),
-            "lr": random.uniform(0.0001, 0.001)
-        })
+#     # Create random validation logs with the correct structure
+#     val_log_info = []
+#     for i in range(20):
+#         val_log_info.append({
+#             "iter": i * 5,
+#             "train/loss": random.uniform(0.5, 3.0),
+#             "val/loss": random.uniform(0.5, 3.0),
+#             "lr": random.uniform(0.0001, 0.001)
+#         })
 
-    # Save dummy final info
-    with open(os.path.join(out_dir, f"final_info_{dataset}_{seed_offset}.json"), "w") as f:
-        json.dump(final_info, f)
+#     # Save dummy final info
+#     with open(os.path.join(out_dir, f"final_info_{dataset}_{seed_offset}.json"), "w") as f:
+#         json.dump(final_info, f)
 
-    return final_info, train_log_info, val_log_info
+#     return final_info, train_log_info, val_log_info
 
 
 
@@ -114,7 +114,7 @@ def get_molecule_and_chemical_formula(idx=0):
         collate_fn=dataset.collate_fn
     )
 
-    data_list = list(loader)[:10]  # Only use first 10 entries
+    data_list = list(loader)  # Only use first 10 entries
 
     print("Getting molecule representations...")
     representations, res= data_list[idx]
@@ -247,50 +247,68 @@ def render_molecule_rdkit(xyz_path, out_path):
         xyz_path (str): Path to input xyz file
         out_path (str): Path to save output png file
     """
-    # Read XYZ file
-    with open(xyz_path, "r") as f:
-        xyz_data = f.readlines()
-
-    # Parse number of atoms
-    num_atoms = int(xyz_data[0])
-
-    # Create RDKit molecule
-    mol = Chem.rdchem.RWMol()
-    conf = Chem.rdchem.Conformer(num_atoms)
-
-    # Add atoms and coordinates
-    for i in range(2, num_atoms+2):
-        line = xyz_data[i].split()
-        atom_symbol = line[0]
-        x = float(line[1])
-        y = float(line[2])
-        z = float(line[3])
+    try:
+        # Create output directory if it doesn't exist
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
         
-        # Add atom
-        atom = Chem.rdchem.Atom(atom_symbol)
-        atom_idx = mol.AddAtom(atom)
-        
-        # Set 3D coordinates
-        conf.SetAtomPosition(atom_idx, (x, y, z))
+        # Read XYZ file
+        with open(xyz_path, "r") as f:
+            xyz_data = f.readlines()
 
-    # Add the conformer after all atoms are added
-    mol.AddConformer(conf)
+        # Parse number of atoms
+        num_atoms = int(xyz_data[0])
 
-    # Connect atoms based on distance
-    for i in range(mol.GetNumAtoms()):
-        for j in range(i+1, mol.GetNumAtoms()):
-            pos_i = conf.GetAtomPosition(i)
-            pos_j = conf.GetAtomPosition(j)
-            dist = pos_i.Distance(pos_j)
+        # Create RDKit molecule
+        mol = Chem.rdchem.RWMol()
+        conf = Chem.rdchem.Conformer(num_atoms)
+
+        # Add atoms and coordinates
+        for i in range(2, num_atoms+2):
+            line = xyz_data[i].split()
+            atom_symbol = line[0]
+            x = float(line[1])
+            y = float(line[2])
+            z = float(line[3])
             
-            # Add bonds if atoms are close enough
-            if dist < 1.7:  # Typical bond length threshold in Angstroms
-                mol.AddBond(i, j, Chem.rdchem.BondType.SINGLE)
+            # Add atom
+            atom = Chem.rdchem.Atom(atom_symbol)
+            atom_idx = mol.AddAtom(atom)
+            
+            # Set 3D coordinates
+            conf.SetAtomPosition(atom_idx, (x, y, z))
 
-    # Convert to regular molecule and render
-    mol = mol.GetMol()
-    img = Draw.MolToImage(mol)
-    img.save(out_path)
+        # Add the conformer after all atoms are added
+        mol.AddConformer(conf)
+
+        # Connect atoms based on distance
+        for i in range(mol.GetNumAtoms()):
+            for j in range(i+1, mol.GetNumAtoms()):
+                pos_i = conf.GetAtomPosition(i)
+                pos_j = conf.GetAtomPosition(j)
+                dist = pos_i.Distance(pos_j)
+                
+                # Add bonds if atoms are close enough
+                if dist < 1.7:  # Typical bond length threshold in Angstroms
+                    mol.AddBond(i, j, Chem.rdchem.BondType.SINGLE)
+
+        # Convert to regular molecule and render
+        mol = mol.GetMol()
+        img = Draw.MolToImage(mol)
+        img.save(out_path)
+        
+    except FileNotFoundError:
+        print(f"Warning: XYZ file not found at {xyz_path}")
+        # Create blank image as fallback
+        from PIL import Image
+        img = Image.new('RGB', (300, 300), color='white')
+        img.save(out_path)
+        
+    except Exception as e:
+        print(f"Warning: Failed to render molecule {xyz_path}: {str(e)}")
+        # Create blank image as fallback
+        from PIL import Image
+        img = Image.new('RGB', (300, 300), color='white')
+        img.save(out_path)
 
 
 
@@ -312,14 +330,18 @@ def generate_dummy(dataset, out_dir, seed_offset):
     atoms.write(xyz_path, format="xyz")
     
     render_molecule_rdkit(xyz_path, os.path.join(out_dir, "chemical_formula.png"))
+    
     out_samples, out_masks, xh_fixed = generate_ts_and_products(
         representations, 
         res,
-        out_dir=out_dir  # Pass out_dir to the function
+        out_dir=out_dir
     )
-    render_molecule_rdkit(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react.png"))
-    render_molecule_rdkit(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts.png"))
-    render_molecule_rdkit(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod.png"))
+    
+    # Render the generated structures
+    for structure in ["react", "ts", "prod"]:
+        xyz_path = os.path.join(out_dir, f"gen_0_{structure}.xyz")
+        png_path = os.path.join(out_dir, f"gen_0_{structure}.png")
+        render_molecule_rdkit(xyz_path, png_path)
 
     # Generate random energies in a reasonable range (in eV)
     reactant_energy = random.uniform(-10.0, -5.0)
@@ -328,11 +350,13 @@ def generate_dummy(dataset, out_dir, seed_offset):
 
     # Create dictionary with energies
     energy_info = {
-        "reactant_energy": reactant_energy,
-        "ts_energy": ts_energy, 
-        "product_energy": product_energy,
-        "activation_energy": ts_energy - reactant_energy,
-        "reaction_energy": product_energy - reactant_energy
+        "activation_energy": {"means": ts_energy - reactant_energy},
+        "reaction_energy": {"means": product_energy - reactant_energy},
+        "energies": {
+            "reactant": reactant_energy,
+            "ts": ts_energy,
+            "product": product_energy
+        }
     }
 
     # Save energy info
@@ -343,23 +367,33 @@ def generate_dummy(dataset, out_dir, seed_offset):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out_dir", type=str, default="run_0")
+    args = parser.parse_args()
+    
     out_dir = args.out_dir
     all_results = {}
     final_infos = {}
     
     # Just use shakespeare_char dataset with one seed
-    dataset = "shakespeare_char"
-    final_info_list = []
+    dataset = "molecules"
     
     # Generate once with seed_offset 0
     energy_info = generate_dummy(dataset, out_dir, 0)
     all_results[f"{dataset}_0_energy_info"] = energy_info
-    final_info_list.append(energy_info)
     
-    final_infos[dataset] = final_info_list[0]  # Store just the energy info dictionary
+    # Store means similar to 2d_diffusion format
+    final_infos[dataset] = {
+        "means": {
+            "activation_energy": energy_info["activation_energy"]["means"]
+        }
+    }
+
+    print(final_infos)
+    print(all_results)
 
     with open(os.path.join(out_dir, "final_info.json"), "w") as f:
         json.dump(final_infos, f)
 
-    with open(os.path.join(out_dir, "all_results.npy"), "wb") as f:
-        np.save(f, all_results)
+    with open(os.path.join(out_dir, "all_results.pkl"), "wb") as f:
+        pickle.dump(all_results, f)

@@ -1,0 +1,29 @@
+[
+    {
+        "Name": "molecule_selection_drug_discovery",
+        "Title": "Molecule Selection for Drug Discovery: Analyzing Chemical Properties and Potential Applications",
+        "Experiment": "Analyze molecules from the dataset to identify promising candidates for drug discovery and other applications. Available molecules:\n\nidx | chemical_formula\n--------------------\n892: C3H5N3O\n536: C3H4N2O\n770: C3H5N3\n286: C3H2N4\n426: C3H3NO2\n184: C2H4N4\n596: C3H4N2O\n751: C3H4O3\n777: C3H5N3\n247: C2H6N2O\n\nFocus on C3H5N3O (idx 892) which has potential as a nucleoside analog for antiviral drugs, and C3H4N2O (idx 536) which could serve as a building block for heterocyclic compounds. Steps:\n1. Load molecules using get_molecule_and_chemical_formula() with selected indices\n2. Generate transition states and products using generate_ts_and_products()\n3. Analyze chemical properties and reaction pathways\n4. Evaluate drug-likeness using metrics like Lipinski's rules\n5. Compare activation energies and reaction energies between candidates",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 6,
+        "novel": 1.0
+    },
+    {
+        "Name": "energetic_materials_analysis",
+        "Title": "Analysis of High-Nitrogen Compounds for Energetic Materials",
+        "Experiment": "Study high-nitrogen compounds as potential energetic materials. Available molecules:\n\nidx | chemical_formula\n--------------------\n892: C3H5N3O\n536: C3H4N2O\n770: C3H5N3\n286: C3H2N4\n426: C3H3NO2\n184: C2H4N4\n596: C3H4N2O\n751: C3H4O3\n777: C3H5N3\n247: C2H6N2O\n\nFocus on C2H4N4 (idx 184) and C3H2N4 (idx 286) as potential energetic materials due to their high nitrogen content. Research plan:\n1. Extract molecular structures using specified indices\n2. Calculate energy content and stability metrics\n3. Generate transition states to understand decomposition pathways\n4. Analyze bond energies and structural features\n5. Compare with known energetic compounds",
+        "Interestingness": 8,
+        "Feasibility": 6,
+        "Novelty": 7,
+        "novel": 1.0
+    },
+    {
+        "Name": "functional_group_reactivity",
+        "Title": "Analyzing the Impact of Functional Groups on Molecular Reactivity",
+        "Experiment": "1. Implement a function to identify and categorize molecules based on specific functional groups (e.g., alcohols, amines, carboxylic acids). 2. Select a diverse set of molecules that represent these functional groups. 3. Use get_molecule_and_chemical_formula() to load the selected molecules. 4. Generate transition states and products using generate_ts_and_products(). 5. Analyze the relationship between the selected functional groups and their corresponding activation and reaction energies. 6. Present findings to highlight how functional group variations influence reactivity.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": 1.0
+    }
+]
