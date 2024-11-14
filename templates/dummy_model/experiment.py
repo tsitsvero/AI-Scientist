@@ -793,13 +793,13 @@ def get_molecule_and_chemical_formula():
     print("Creating ASE Atoms object...")
     # Create ASE Atoms object
     atoms = ase.Atoms(numbers=atomic_nums, positions=pos)
-    atoms.write("./demo/inpainting/chemical_formula.xyz", format="xyz")
+    atoms.write("chemical_formula.xyz", format="xyz")
     
     print("Done getting molecule and chemical formula")    
-    return representations, res, atoms.get_chemical_formula()
+    return representations, res, atoms.get_chemical_formula(), atoms
 
 
-def generate_ts_and_products(representations, res, checkpoint_path="/home/mm/Downloads/pretrained-ts1x-diff.ckpt", device=None):
+def generate_ts_and_products(representations, res, checkpoint_path="/home/mm/Downloads/pretrained-ts1x-diff.ckpt", device=None, out_dir="."):
     """Generates transition state and product structures using pre-trained DDPM model
     
     Args:
@@ -901,7 +901,7 @@ def generate_ts_and_products(representations, res, checkpoint_path="/home/mm/Dow
         
         # Write to xyz file
         structure_type = ["react", "ts", "prod"][idx]
-        xyz_path = f"./demo/inpainting/gen_0_{structure_type}.xyz"
+        xyz_path = os.path.join(out_dir, f"gen_0_{structure_type}.xyz")
         atoms.write(xyz_path, format="xyz")
     
 
@@ -968,10 +968,19 @@ def generate_dummy(dataset, out_dir, seed_offset):
     # Create output directory if it doesn't exist
     os.makedirs(out_dir, exist_ok=True)
     
-    representations, res, chemical_formula = get_molecule_and_chemical_formula()
+    representations, res, chemical_formula, atoms = get_molecule_and_chemical_formula()
     print("Chemical formula:", chemical_formula)
-    render_molecule_rdkit(os.path.join(out_dir, "chemical_formula.xyz"), os.path.join(out_dir, "chemical_formula.png"))
-    out_samples, out_masks, xh_fixed = generate_ts_and_products(representations, res)
+    
+    # Write xyz file directly to output directory
+    xyz_path = os.path.join(out_dir, "chemical_formula.xyz")
+    atoms.write(xyz_path, format="xyz")
+    
+    render_molecule_rdkit(xyz_path, os.path.join(out_dir, "chemical_formula.png"))
+    out_samples, out_masks, xh_fixed = generate_ts_and_products(
+        representations, 
+        res,
+        out_dir=out_dir  # Pass out_dir to the function
+    )
     render_molecule_rdkit(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react.png"))
     render_molecule_rdkit(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts.png"))
     render_molecule_rdkit(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod.png"))
