@@ -7,6 +7,8 @@ import ase
 from xtb.ase.calculator import XTB
 import numpy as np
 
+import os
+
 
 def render_molecule_rdkit(xyz_path, out_path):
     """Renders a molecule from an xyz file using RDKit and saves it as a png image
@@ -62,6 +64,7 @@ def render_molecule_rdkit(xyz_path, out_path):
 
 
 
+out_dir = "."
 
 render_molecule_rdkit(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react.png"))
 render_molecule_rdkit(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts.png"))
