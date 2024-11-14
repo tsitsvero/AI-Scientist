@@ -18,12 +18,12 @@
         "novel": 1.0
     },
     {
-        "Name": "functional_group_reactivity",
-        "Title": "Analyzing the Impact of Functional Groups on Molecular Reactivity",
-        "Experiment": "1. Implement a function to identify and categorize molecules based on specific functional groups (e.g., alcohols, amines, carboxylic acids). 2. Select a diverse set of molecules that represent these functional groups. 3. Use get_molecule_and_chemical_formula() to load the selected molecules. 4. Generate transition states and products using generate_ts_and_products(). 5. Analyze the relationship between the selected functional groups and their corresponding activation and reaction energies. 6. Present findings to highlight how functional group variations influence reactivity.",
-        "Interestingness": 8,
+        "Name": "functional_group_variation_study",
+        "Title": "Impact of Functional Group Variations on Reaction Pathways: A Comparative Study",
+        "Experiment": "Select a set of molecules with specific functional groups (e.g., hydroxyl, amine, carboxylic acid) and use the modified `generate_dummy()` function to iterate through these groups for multiple molecules. Generate their transition states and products, collecting activation energies and reaction energies for each structure. Analyze how variations in functional groups influence reaction pathways and energetics, allowing for a clearer understanding of structure-activity relationships.",
+        "Interestingness": 9,
         "Feasibility": 8,
-        "Novelty": 7,
+        "Novelty": 9,
         "novel": 1.0
     }
 ]
