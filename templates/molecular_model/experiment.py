@@ -21,46 +21,6 @@ args = parser.parse_args()
 
 import random
 
-# def train_dummy(dataset, out_dir, seed_offset):
-#     """Dummy training function that returns random numbers in the same format as train()"""
-#     # Create output directory if it doesn't exist
-#     os.makedirs(out_dir, exist_ok=True)
-    
-#     # Create random final_info dict with realistic-looking values
-#     final_info = {
-#         "final_train_loss": random.uniform(0.5, 2.0),
-#         "best_val_loss": random.uniform(0.5, 2.0),
-#         "total_train_time": random.uniform(100, 1000),
-#         "avg_inference_tokens_per_second": random.uniform(10, 100)
-#     }
-
-#     # Create random training logs with the correct structure
-#     train_log_info = []
-#     for i in range(100):
-#         train_log_info.append({
-#             "iter": i,
-#             "loss": random.uniform(0.5, 3.0),
-#             "time": random.uniform(10, 100)
-#         })
-
-#     # Create random validation logs with the correct structure
-#     val_log_info = []
-#     for i in range(20):
-#         val_log_info.append({
-#             "iter": i * 5,
-#             "train/loss": random.uniform(0.5, 3.0),
-#             "val/loss": random.uniform(0.5, 3.0),
-#             "lr": random.uniform(0.0001, 0.001)
-#         })
-
-#     # Save dummy final info
-#     with open(os.path.join(out_dir, f"final_info_{dataset}_{seed_offset}.json"), "w") as f:
-#         json.dump(final_info, f)
-
-#     return final_info, train_log_info, val_log_info
-
-
-
 # --- Importing necessary function ---
 import torch
 from torch.utils.data import DataLoader
@@ -240,79 +200,7 @@ def generate_ts_and_products(representations, res, checkpoint_path="/home/mm/Dow
     return out_samples, out_masks, xh_fixed
 
 
-def render_molecule_rdkit(xyz_path, out_path):
-    """Renders a molecule from an xyz file using RDKit and saves it as a png image
-    
-    Args:
-        xyz_path (str): Path to input xyz file
-        out_path (str): Path to save output png file
-    """
-    try:
-        # Create output directory if it doesn't exist
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        
-        # Read XYZ file
-        with open(xyz_path, "r") as f:
-            xyz_data = f.readlines()
-
-        # Parse number of atoms
-        num_atoms = int(xyz_data[0])
-
-        # Create RDKit molecule
-        mol = Chem.rdchem.RWMol()
-        conf = Chem.rdchem.Conformer(num_atoms)
-
-        # Add atoms and coordinates
-        for i in range(2, num_atoms+2):
-            line = xyz_data[i].split()
-            atom_symbol = line[0]
-            x = float(line[1])
-            y = float(line[2])
-            z = float(line[3])
-            
-            # Add atom
-            atom = Chem.rdchem.Atom(atom_symbol)
-            atom_idx = mol.AddAtom(atom)
-            
-            # Set 3D coordinates
-            conf.SetAtomPosition(atom_idx, (x, y, z))
-
-        # Add the conformer after all atoms are added
-        mol.AddConformer(conf)
-
-        # Connect atoms based on distance
-        for i in range(mol.GetNumAtoms()):
-            for j in range(i+1, mol.GetNumAtoms()):
-                pos_i = conf.GetAtomPosition(i)
-                pos_j = conf.GetAtomPosition(j)
-                dist = pos_i.Distance(pos_j)
-                
-                # Add bonds if atoms are close enough
-                if dist < 1.7:  # Typical bond length threshold in Angstroms
-                    mol.AddBond(i, j, Chem.rdchem.BondType.SINGLE)
-
-        # Convert to regular molecule and render
-        mol = mol.GetMol()
-        img = Draw.MolToImage(mol)
-        img.save(out_path)
-        
-    except FileNotFoundError:
-        print(f"Warning: XYZ file not found at {xyz_path}")
-        # Create blank image as fallback
-        from PIL import Image
-        img = Image.new('RGB', (300, 300), color='white')
-        img.save(out_path)
-        
-    except Exception as e:
-        print(f"Warning: Failed to render molecule {xyz_path}: {str(e)}")
-        # Create blank image as fallback
-        from PIL import Image
-        img = Image.new('RGB', (300, 300), color='white')
-        img.save(out_path)
-
-
-
-def generate_dummy(dataset, out_dir, seed_offset):
+def perform_experiment(dataset, out_dir, seed_offset):
     """Dummy training function that returns random energy values"""
     # Create output directory if it doesn't exist
     os.makedirs(out_dir, exist_ok=True)
@@ -329,7 +217,6 @@ def generate_dummy(dataset, out_dir, seed_offset):
     xyz_path = os.path.join(out_dir, "chemical_formula.xyz")
     atoms.write(xyz_path, format="xyz")
     
-    render_molecule_rdkit(xyz_path, os.path.join(out_dir, "chemical_formula.png"))
     
     out_samples, out_masks, xh_fixed = generate_ts_and_products(
         representations, 
@@ -337,12 +224,6 @@ def generate_dummy(dataset, out_dir, seed_offset):
         out_dir=out_dir
     )
     
-    # Render the generated structures
-    for structure in ["react", "ts", "prod"]:
-        xyz_path = os.path.join(out_dir, f"gen_0_{structure}.xyz")
-        png_path = os.path.join(out_dir, f"gen_0_{structure}.png")
-        render_molecule_rdkit(xyz_path, png_path)
-
     # Generate random energies in a reasonable range (in eV)
     reactant_energy = random.uniform(-10.0, -5.0)
     ts_energy = random.uniform(-5.0, 0.0) 
@@ -379,7 +260,7 @@ if __name__ == "__main__":
     dataset = "molecules"
     
     # Generate once with seed_offset 0
-    energy_info = generate_dummy(dataset, out_dir, 0)
+    energy_info = perform_experiment(dataset, out_dir, 0)
     all_results[f"{dataset}_0_energy_info"] = energy_info
     
     # Store means similar to 2d_diffusion format
