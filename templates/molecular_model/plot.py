@@ -10,7 +10,7 @@ import numpy as np
 import os
 
 
-def render_molecule_rdkit(xyz_path, out_path):
+def render_molecule_2d(xyz_path, out_path):
     """Renders a molecule from an xyz file using RDKit and saves it as a png image
     
     Args:
@@ -84,6 +84,56 @@ def render_molecule_rdkit(xyz_path, out_path):
 
 out_dir = "."
 
-render_molecule_rdkit(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react.png"))
-render_molecule_rdkit(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts.png"))
-render_molecule_rdkit(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod.png"))
+render_molecule_2d(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react_2d.png"))
+render_molecule_2d(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts_2d.png"))
+render_molecule_2d(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod_2d.png"))
+
+
+
+import ase
+import ase.visualize
+import numpy as np
+import os
+
+def render_molecule_3d(xyz_path, out_path):
+    """Renders a molecule from an xyz file using ASE and saves it as a png image
+    
+    Args:
+        xyz_path (str): Path to input xyz file
+        out_path (str): Path to save output png file
+    """
+    # Create empty figure first
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.set_facecolor('white')
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    try:
+        # Create output directory if it doesn't exist
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        
+        # Read XYZ file using ASE
+        atoms = ase.io.read(xyz_path)
+        
+        # Create the visualization
+        from ase.visualize.plot import plot_atoms
+        
+        # Create figure and render atoms
+        fig, ax = plt.subplots()
+        ax.set_axis_off()  # Hide axes
+        
+        # Plot atoms with element symbols
+        plot_atoms(atoms, ax, rotation='45z,45x,45y', show_unit_cell=False, scale=0.5, radii=0.5)
+               
+        # Save figure
+        plt.savefig(out_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+    except Exception as e:
+        print(f"Warning: Failed to render molecule {xyz_path}: {str(e)}")
+
+
+render_molecule_3d(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react_3d.png"))
+render_molecule_3d(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts_3d.png"))
+render_molecule_3d(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod_3d.png"))
