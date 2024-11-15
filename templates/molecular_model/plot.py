@@ -153,10 +153,12 @@ for run in run_dirs:
     if run not in labels:
         labels[run] = run
 
-# Create comparison plot of all runs
+# Create comparison plots for both 2D and 3D renderings
 num_runs = len(run_dirs)
 if num_runs > 0:
+    # 2D comparison plot
     fig, axs = plt.subplots(num_runs, 3, figsize=(15, 5*num_runs))
+    fig.suptitle("2D Molecular Structures", y=1.02, fontsize=16)
     
     for i, run in enumerate(run_dirs):
         for j, stage in enumerate(["react", "ts", "prod"]):
@@ -179,5 +181,33 @@ if num_runs > 0:
             axs[i,0].set_ylabel(labels[run])
 
     plt.tight_layout()
-    plt.savefig("comparison.png")
+    plt.savefig("comparison_2d.png")
+    plt.close()
+
+    # 3D comparison plot
+    fig, axs = plt.subplots(num_runs, 3, figsize=(15, 5*num_runs))
+    fig.suptitle("3D Molecular Structures", y=1.02, fontsize=16)
+    
+    for i, run in enumerate(run_dirs):
+        for j, stage in enumerate(["react", "ts", "prod"]):
+            img_path = osp.join(run, f"gen_0_{stage}_3d.png")
+            if osp.exists(img_path):
+                img = plt.imread(img_path)
+                if num_runs == 1:
+                    axs[j].imshow(img)
+                    axs[j].set_title(stage.upper())
+                    axs[j].axis('off')
+                else:
+                    axs[i,j].imshow(img)
+                    axs[i,j].set_title(stage.upper())
+                    axs[i,j].axis('off')
+        
+        # Add run label
+        if num_runs == 1:
+            axs[0].set_ylabel(labels[run])
+        else:
+            axs[i,0].set_ylabel(labels[run])
+
+    plt.tight_layout()
+    plt.savefig("comparison_3d.png")
     plt.close()
