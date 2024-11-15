@@ -2,12 +2,15 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import Draw
 
-
 import ase
+import ase.io
 from xtb.ase.calculator import XTB
 import numpy as np
 
 import os
+import json
+import os.path as osp
+import matplotlib.pyplot as plt
 
 
 def render_molecule_2d(xyz_path, out_path):
@@ -81,20 +84,6 @@ def render_molecule_2d(xyz_path, out_path):
         img.save(out_path)
 
 
-
-out_dir = "."
-
-render_molecule_2d(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react_2d.png"))
-render_molecule_2d(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts_2d.png"))
-render_molecule_2d(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod_2d.png"))
-
-
-
-import ase
-import ase.visualize
-import numpy as np
-import os
-
 def render_molecule_3d(xyz_path, out_path):
     """Renders a molecule from an xyz file using ASE and saves it as a png image
     
@@ -134,6 +123,61 @@ def render_molecule_3d(xyz_path, out_path):
         print(f"Warning: Failed to render molecule {xyz_path}: {str(e)}")
 
 
-render_molecule_3d(os.path.join(out_dir, "gen_0_react.xyz"), os.path.join(out_dir, "gen_0_react_3d.png"))
-render_molecule_3d(os.path.join(out_dir, "gen_0_ts.xyz"), os.path.join(out_dir, "gen_0_ts_3d.png"))
-render_molecule_3d(os.path.join(out_dir, "gen_0_prod.xyz"), os.path.join(out_dir, "gen_0_prod_3d.png"))
+# Find all run directories
+folders = os.listdir("./")
+run_dirs = [f for f in folders if f.startswith("run") and osp.isdir(f)]
+
+# Load results from each run
+results = {}
+for run_dir in run_dirs:
+    try:
+        # Load run info from json
+        with open(osp.join(run_dir, "final_info.json"), "r") as f:
+            results[run_dir] = json.load(f)
+            
+        # Render molecules for this run
+        for stage in ["react", "ts", "prod"]:
+            xyz_path = osp.join(run_dir, f"gen_0_{stage}.xyz")
+            render_molecule_2d(xyz_path, osp.join(run_dir, f"gen_0_{stage}_2d.png"))
+            render_molecule_3d(xyz_path, osp.join(run_dir, f"gen_0_{stage}_3d.png"))
+    except Exception as e:
+        print(f"Warning: Could not process {run_dir}: {str(e)}")
+
+# Create labels dictionary
+labels = {
+    "run_0": "Baseline",
+}
+
+# Use run key as default label if not specified
+for run in run_dirs:
+    if run not in labels:
+        labels[run] = run
+
+# Create comparison plot of all runs
+num_runs = len(run_dirs)
+if num_runs > 0:
+    fig, axs = plt.subplots(num_runs, 3, figsize=(15, 5*num_runs))
+    
+    for i, run in enumerate(run_dirs):
+        for j, stage in enumerate(["react", "ts", "prod"]):
+            img_path = osp.join(run, f"gen_0_{stage}_2d.png")
+            if osp.exists(img_path):
+                img = plt.imread(img_path)
+                if num_runs == 1:
+                    axs[j].imshow(img)
+                    axs[j].set_title(stage.upper())
+                    axs[j].axis('off')
+                else:
+                    axs[i,j].imshow(img)
+                    axs[i,j].set_title(stage.upper())
+                    axs[i,j].axis('off')
+        
+        # Add run label
+        if num_runs == 1:
+            axs[0].set_ylabel(labels[run])
+        else:
+            axs[i,0].set_ylabel(labels[run])
+
+    plt.tight_layout()
+    plt.savefig("comparison.png")
+    plt.close()
