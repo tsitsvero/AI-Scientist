@@ -201,7 +201,7 @@ def generate_ts_and_products(representations, res, checkpoint_path="/home/mm/Dow
 
 
 def perform_experiment(dataset, out_dir, seed_offset):
-    """Dummy training function that returns random energy values"""
+    """Performs experiment to generate transition state and product structures"""
     # Create output directory if it doesn't exist
     os.makedirs(out_dir, exist_ok=True)
     
