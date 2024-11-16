@@ -1,16 +1,19 @@
-from rdkit import Chem
-from rdkit.Chem import AllChem
-from rdkit.Chem import Draw
-
 import ase
 import ase.io
 from xtb.ase.calculator import XTB
 import numpy as np
 
+
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.Chem import Draw
+
+
 import os
 import json
 import os.path as osp
 import matplotlib.pyplot as plt
+
 
 
 def render_molecule_2d(xyz_path, out_path):
@@ -138,8 +141,9 @@ for run_dir in run_dirs:
         # Render molecules for this run
         for stage in ["react", "ts", "prod"]:
             xyz_path = osp.join(run_dir, f"gen_0_{stage}.xyz")
-            render_molecule_2d(xyz_path, osp.join(run_dir, f"gen_0_{stage}_2d.png"))
-            render_molecule_3d(xyz_path, osp.join(run_dir, f"gen_0_{stage}_3d.png"))
+            if osp.exists(xyz_path):
+                render_molecule_2d(xyz_path, osp.join(run_dir, f"{stage}_2d.png"))
+                render_molecule_3d(xyz_path, osp.join(run_dir, f"{stage}_3d.png"))
     except Exception as e:
         print(f"Warning: Could not process {run_dir}: {str(e)}")
 
@@ -162,7 +166,7 @@ if num_runs > 0:
     
     for i, run in enumerate(run_dirs):
         for j, stage in enumerate(["react", "ts", "prod"]):
-            img_path = osp.join(run, f"gen_0_{stage}_2d.png")
+            img_path = osp.join(run, f"{stage}_2d.png")
             if osp.exists(img_path):
                 img = plt.imread(img_path)
                 if num_runs == 1:
@@ -190,7 +194,7 @@ if num_runs > 0:
     
     for i, run in enumerate(run_dirs):
         for j, stage in enumerate(["react", "ts", "prod"]):
-            img_path = osp.join(run, f"gen_0_{stage}_3d.png")
+            img_path = osp.join(run, f"{stage}_3d.png")
             if osp.exists(img_path):
                 img = plt.imread(img_path)
                 if num_runs == 1:
@@ -210,4 +214,37 @@ if num_runs > 0:
 
     plt.tight_layout()
     plt.savefig("comparison_3d.png")
+    plt.close()
+
+
+
+    # Plot histogram of pairwise distances for TS structures across runs
+    plt.figure(figsize=(10,6))
+    
+    # Define colors for different runs
+    colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
+    
+    for i, run in enumerate(run_dirs):
+        # Read TS structure
+        xyz_path = osp.join(run, "gen_0_ts.xyz")
+        if osp.exists(xyz_path):
+            # Get pairwise distances
+            atoms = ase.io.read(xyz_path)
+            distances = []
+            positions = atoms.get_positions()
+            for j in range(len(atoms)):
+                for k in range(j+1, len(atoms)):
+                    dist = np.linalg.norm(positions[j] - positions[k])
+                    distances.append(dist)
+                    
+            # Plot histogram for this run
+            plt.hist(distances, bins=30, alpha=0.5, label=labels[run], 
+                    color=colors[i % len(colors)])  # Use modulo to cycle through colors if more runs than colors
+    
+    plt.xlabel('Distance (Å)')
+    plt.ylabel('Count')
+    plt.title('Histogram of Pairwise Atomic Distances in Transition States')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("ts_distances_comparison.png")
     plt.close()

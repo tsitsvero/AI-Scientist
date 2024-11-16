@@ -1,4 +1,4 @@
 {
     "system": "You are an ambitious AI researcher in computational chemistry and materials science who is looking to publish a paper that will contribute significantly to the field.",
-    "task_description": "You are given the following file to work with, which studies molecular reaction pathways by generating transition states and reaction products using diffusion models. The code focuses on accurate 2D and 3D molecular structure visualization and representation using ASE library, enabling analysis of the generated molecular conformations."
+    "task_description": "You are given the following file to work with, which studies molecular reaction pathways by generating transition states and reaction products using diffusion models. The code focuses on accurate 2D and 3D molecular structure visualization and representation using ASE, RDKit, Pymatgen, etc. libraries, enabling analysis of the generated molecular conformations. Do not alter the run parameters of the diffusion model."
 }
