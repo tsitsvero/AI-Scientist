@@ -18,12 +18,12 @@
         "novel": 1.0
     },
     {
-        "Name": "functional_group_variation_study",
-        "Title": "Impact of Functional Group Variations on Reaction Pathways: A Comparative Study",
-        "Experiment": "Select a set of molecules with specific functional groups (e.g., hydroxyl, amine, carboxylic acid) and use the modified `generate_dummy()` function to iterate through these groups for multiple molecules. Generate their transition states and products, collecting activation energies and reaction energies for each structure. Analyze how variations in functional groups influence reaction pathways and energetics, allowing for a clearer understanding of structure-activity relationships.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
+        "Name": "environmental_effects_on_ts_energies",
+        "Title": "Exploring Environmental Effects on Transition State Energies in Catalysis",
+        "Experiment": "1. Use existing functions to generate transition states for a variety of molecules within the dataset. 2. Modify the 'generate_ts_and_products' function to simulate different molecular environments by adjusting conditions or configurations. 3. Analyze how these environmental changes impact transition state energies. 4. Identify trends or patterns that suggest potential catalytic influences that could stabilize or destabilize transition states. 5. Compare findings with known catalytic systems to validate insights.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 7,
         "novel": 1.0
     }
 ]
